@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def generate_simulation_data(num_rows=1000, num_numeric_columns=20, n_columns_to_make_for_each_column=4):
+def generate_simulation_data(outcome_type_binary = True, num_rows=1000, num_numeric_columns=20, n_columns_to_make_for_each_column=4):
     np.random.seed(42)
     
     n_key_columns = int(num_numeric_columns/4)
@@ -14,15 +14,21 @@ def generate_simulation_data(num_rows=1000, num_numeric_columns=20, n_columns_to
 
     # Generate coefficients for predictive columns
     coefficients = np.random.randn(n_key_columns)
+    
+    if outcome_type_binary:
+        # Create binary target column Y based on predictive columns
+        df['Y'] = 0
+        for i in range(n_key_columns):
+            df['Y'] += coefficients[i] * df['X'+str(i+1)] + np.random.normal(0, 1, num_rows)
 
-    # Create binary target column Y based on predictive columns
-    df['Y'] = 0
-    for i in range(n_key_columns):
-        df['Y'] += coefficients[i] * df['X'+str(i+1)] + np.random.normal(0, 1, num_rows)
-
-    # Apply threshold to convert target column to binary
-    threshold = df['Y'].quantile(0.5)
-    df['Y'] = (df['Y'] > threshold).astype(int)
+        # Apply threshold to convert target column to binary
+        threshold = df['Y'].quantile(0.9)
+        df['Y'] = (df['Y'] > threshold).astype(int)
+    else:
+        predictive_columns = np.random.choice(df.columns, n_key_columns, replace=False)
+        coefficients = np.random.rand(n_key_columns)
+        df['Y'] = np.sum(df[predictive_columns] * coefficients, axis=1) + np.random.normal(0, 1, num_rows)
+        
 
     # Randomly select 10 features (excluding Y column)
     selected_features = np.random.choice(df.columns[:-1], size=n_columns_to_make_correlated, replace=False)
