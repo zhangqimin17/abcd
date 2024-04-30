@@ -11,15 +11,15 @@ def generate_simulation_data(outcome_type_binary = True, num_rows=1000, num_nume
     columns = ['X'+str(i) for i in range(1, num_numeric_columns+1)]
     data = np.random.randn(num_rows, num_numeric_columns)
     df = pd.DataFrame(data, columns=columns)
-
-    # Generate coefficients for predictive columns
-    coefficients = np.random.randn(n_key_columns)
     
     if outcome_type_binary:
+        # Generate coefficients for predictive columns
+        coefficients1 = np.random.randn(n_key_columns)
+        coefficients2 = np.random.randn(n_key_columns)
         # Create binary target column Y based on predictive columns
         df['Y'] = 0
         for i in range(n_key_columns):
-            df['Y'] += coefficients[i] * df['X'+str(i+1)] + np.random.normal(0, 1, num_rows)
+            df['Y'] += coefficients1[i] * df['X'+str(i+1)]**2 + coefficients2[i] * df['X'+str(i+1)] + np.random.normal(0, 1, num_rows)
 
         # Apply threshold to convert target column to binary
         threshold = df['Y'].quantile(0.9)
